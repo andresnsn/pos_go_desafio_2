@@ -11,6 +11,7 @@ import (
 func main() {
 	http.HandleFunc("/getcep", getCepHandler)
 
+	//Estou subindo um servidor apenas para ser o gatilho da aplicação, que deve responder a busca por /getcep
 	fmt.Println("Servidor rodando localmente em http://localhost:8080")
 
 	http.ListenAndServe(":8080", nil)
@@ -29,11 +30,14 @@ func getCepHandler(w http.ResponseWriter, r *http.Request) {
 	select {
 
 	case viaCep := <-viaCepChannel:
-		fmt.Println("Foi pelo ViaCep: ", viaCep.Logradouro)
+		fmt.Printf("Foi pelo ViaCep, estes são os dados %+v\n", viaCep)
 
 	case brasilApi := <-brasilApiChannel:
-		time.Sleep(time.Second * 5)
-		fmt.Println("Foi pelo Brasil API: ", brasilApi.Street)
+		fmt.Printf("Foi pelo BrasilApi, estes são os dados %+v\n", brasilApi)
+
+	case <-time.After(1 * time.Second):
+		fmt.Println("Nenhuma das APIs respondeu a tempo!")
+
 	}
 
 }
@@ -56,6 +60,9 @@ func getViaCepApi(ch chan<- domain.ViaCep) {
 	}
 
 	ch <- viacep
+
+	fmt.Println("Devolvi pro canal de ViaCep")
+
 }
 
 func getBrasilApi(ch chan<- domain.BrasilAPI) {
@@ -77,4 +84,6 @@ func getBrasilApi(ch chan<- domain.BrasilAPI) {
 	}
 
 	ch <- brasilApi
+
+	fmt.Println("Devolvi pro canal de BrasilAPI")
 }
